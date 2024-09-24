@@ -58,12 +58,14 @@ contract DAO is Ownable {
   }
 
   function vote(uint256 proposalId, uint8 voteOption) external onlyMember {
-    require(proposals[proposalId].endTime > block.timestamp, "Voting period id over");
-    require(!proposals[proposalId].voted[msg.sender], "Already voted");
+    Proposal storage proposal = proposals[proposalId];
+    require(proposal.endTime > block.timestamp, "Voting period id over");
+    require(!proposal.voted[msg.sender], "Already voted");
 
     uint256 voterShares = shares[msg.sender];
-    Proposal storage proposal = proposals[proposalId];
 
+    proposal.voted[msg.sender] = true;
+    
     if (voteOption == 1) {
       proposal.votesFor += voterShares;
     } else if (voteOption == 2) {
@@ -73,7 +75,19 @@ contract DAO is Ownable {
     } else {
       revert("Invalid vote option");
     }
+  }
 
-    proposal.voted[msg.sender] = true;
+  function executeProposal(uint256 proposalId) external onlyMember {
+    Proposal storage proposal = proposals[proposalId];
+    require(proposal.endTime < block.timestamp, "Voting still active");
+    require(!proposal.executed, "Proposal already executed");
+
+    proposal.executed = true;
+
+    if (proposal.votesFor > proposal.votesAgainst) {
+      if (proposal.recipient != address(0) && proposal.amount > 0) {
+        require(token.transfer(proposal.recipient, proposal.amount), "Token transfer failed");
+      }
+    }
   }
 }
