@@ -56,4 +56,24 @@ contract DAO is Ownable {
     proposal.executed = false;
     proposal.endTime = block.timestamp + _votingPeriod * 1 days;
   }
+
+  function vote(uint256 proposalId, uint8 voteOption) external onlyMember {
+    require(proposals[proposalId].endTime > block.timestamp, "Voting period id over");
+    require(!proposals[proposalId].voted[msg.sender], "Already voted");
+
+    uint256 voterShares = shares[msg.sender];
+    Proposal storage proposal = proposals[proposalId];
+
+    if (voteOption == 1) {
+      proposal.votesFor += voterShares;
+    } else if (voteOption == 2) {
+      proposal.votesAgainst += voterShares;
+    } else if (voteOption == 3) {
+      proposal.votesAbstain += voterShares;
+    } else {
+      revert("Invalid vote option");
+    }
+
+    proposal.voted[msg.sender] = true;
+  }
 }
