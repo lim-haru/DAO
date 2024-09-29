@@ -72,6 +72,7 @@ contract DAO is Ownable {
 
   function vote(uint256 proposalId, uint8 voteOption) external onlyMember {
     Proposal storage proposal = proposals[proposalId];
+    require(proposalId < proposalCount, "Invalid proposal ID");
     require(proposal.endTime > block.timestamp, "Voting period id over");
     require(!proposal.voted[msg.sender], "Already voted");
     require(delegate[msg.sender] == address(0), "You have delegated your vote, cannot vote directly");
