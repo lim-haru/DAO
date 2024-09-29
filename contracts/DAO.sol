@@ -34,6 +34,13 @@ contract DAO is Ownable {
     _;
   }
   
+  event ShareBought(address buyer, uint256 amount);
+  event ProposalCreated(uint256 proposalId, string title, string description, address recipient, uint256 amount, uint256 votingPeriod);
+  event VotedProposal(uint256 proposalId, address voter, uint8 voteOption, uint256 amount);
+  event DelegateShares(address delegate, address delegator, uint256 amount);
+  event DelegationRevoked(address delegate, address delegator, uint256 amount);
+  event ProposalExecuted(uint256 proposalId);
+
   constructor(IERC20 _token, uint256 _pricePerShare) Ownable(msg.sender) {
     token = _token;
     pricePerShare = _pricePerShare;
@@ -44,6 +51,7 @@ contract DAO is Ownable {
     require(token.transferFrom(msg.sender, address(this), amount * pricePerShare), "Token transfer failed");
 
     shares[msg.sender] += amount;
+    emit ShareBought(msg.sender, amount);
   }
 
   function endSale() external onlyOwner {
@@ -58,6 +66,7 @@ contract DAO is Ownable {
     proposal.amount = _amount;
     proposal.executed = false;
     proposal.endTime = block.timestamp + _votingPeriod * 1 days;
+    emit ProposalCreated(proposalCount++ - 1, _title, _description, _recipient, _amount, _votingPeriod);
   }
 
   function delegateVote(address to) external onlyMember {
@@ -68,6 +77,7 @@ contract DAO is Ownable {
     delegate[msg.sender] = to;
     delegator[to].push(msg.sender);
     delegatedVotes[to] += shares[msg.sender];
+    emit DelegateShares(msg.sender, to, shares[msg.sender]);
   }
 
   function vote(uint256 proposalId, uint8 voteOption) external onlyMember {
@@ -87,10 +97,13 @@ contract DAO is Ownable {
     
     if (voteOption == 1) {
       proposal.votesFor += voterShares;
+      emit VotedProposal(proposalId, msg.sender, voteOption, voterShares);
     } else if (voteOption == 2) {
       proposal.votesAgainst += voterShares;
+      emit VotedProposal(proposalId, msg.sender, voteOption, voterShares);
     } else if (voteOption == 3) {
       proposal.votesAbstain += voterShares;
+      emit VotedProposal(proposalId, msg.sender, voteOption, voterShares);
     } else {
       revert("Invalid vote option");
     }
@@ -108,6 +121,7 @@ contract DAO is Ownable {
         require(token.transfer(proposal.recipient, proposal.amount), "Token transfer failed");
       }
     }
+    emit ProposalExecuted(proposalId);
   }
 
   function revokeDelegation() external onlyMember {
@@ -119,7 +133,9 @@ contract DAO is Ownable {
     for (uint256 i = 0; i < delegator[currentDelegate].length; i++) {
       if (delegator[currentDelegate][i] == msg.sender) {
         delete delegator[currentDelegate][i];
-    } }
+      }
+    }
+    emit DelegationRevoked(msg.sender, currentDelegate, shares[msg.sender]);
   }
 
   function hasVoted(uint proposalId, address voter) external view returns (bool) {

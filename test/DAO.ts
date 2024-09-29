@@ -24,7 +24,9 @@ describe("DAO", function () {
     await token.transfer(addr1.address, parseEther("1000.0"));
     await token.connect(addr1).approve(dao.getAddress(), parseEther("1000"));
 
-    await dao.connect(addr1).buyShares(parseEther("100.0"));
+    await expect(dao.connect(addr1).buyShares(parseEther("100.0")))
+      .to.emit(dao, "ShareBought")
+      .withArgs(addr1, parseEther("100.0"));
 
     expect(await dao.shares(addr1.address)).to.equal(parseEther("100.0"));
   });
@@ -36,7 +38,9 @@ describe("DAO", function () {
     await token.connect(addr1).approve(dao.getAddress(), parseEther("1000"));
     await dao.connect(addr1).buyShares(parseEther("100.0"));
 
-    await dao.connect(addr1).proposeDecision("Proposal 1", "Proposal test 1", hre.ethers.ZeroAddress, 0, 3);
+    await expect(dao.connect(addr1).proposeDecision("Proposal 1", "Proposal test 1", hre.ethers.ZeroAddress, 0, 3))
+      .to.emit(dao, "ProposalCreated")
+      .withArgs(0, "Proposal 1", "Proposal test 1", hre.ethers.ZeroAddress, 0, 3);
 
     const proposal = await dao.proposals(0);
     expect(proposal.title).to.equal("Proposal 1");
@@ -54,7 +58,7 @@ describe("DAO", function () {
     await dao.connect(addr1).proposeDecision("Proposal 1", "Proposal test 1", hre.ethers.ZeroAddress, 0, 3);
 
     await dao.connect(addr1).vote(0, 1);
-    await dao.connect(addr2).vote(0, 2);
+    await expect(dao.connect(addr2).vote(0, 2)).to.emit(dao, "VotedProposal").withArgs(0, addr2, 2, dao.shares(addr2));
 
     const proposal = await dao.proposals(0);
     expect(proposal.votesFor).to.equal(await dao.shares(addr1.address));
@@ -71,7 +75,7 @@ describe("DAO", function () {
     await dao.connect(addr1).vote(0, 1);
 
     await time.increase(ONE_DAY_IN_SECONDS * 3);
-    await dao.connect(addr1).executeProposal(0);
+    await expect(dao.connect(addr1).executeProposal(0)).to.emit(dao, "ProposalExecuted").withArgs(0);
 
     const proposal = await dao.proposals(0);
     expect(proposal.executed).to.equal(true);
@@ -93,7 +97,9 @@ describe("DAO", function () {
     await dao.connect(addr1).buyShares(parseEther("100.0"));
     await dao.connect(addr2).buyShares(parseEther("75.0"));
 
-    await dao.connect(addr1).delegateVote(addr2.address);
+    await expect(dao.connect(addr1).delegateVote(addr2.address))
+      .to.emit(dao, "DelegateShares")
+      .withArgs(addr1, addr2, dao.shares(addr1));
 
     expect(await dao.delegatedVotes(addr2)).to.equal(parseEther("100.0"));
   });
@@ -109,7 +115,9 @@ describe("DAO", function () {
     await dao.connect(addr2).buyShares(parseEther("75.0"));
     await dao.connect(addr1).delegateVote(addr2.address);
 
-    await dao.connect(addr1).revokeDelegation();
+    await expect(dao.connect(addr1).revokeDelegation())
+      .to.emit(dao, "DelegationRevoked")
+      .withArgs(addr1, addr2, dao.shares(addr1));
 
     expect(await dao.delegatedVotes(addr2)).to.equal(0);
   });
