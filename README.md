@@ -1,4 +1,4 @@
-# StartToImpact: Smart Contract con Solidity Advanced - Travel
+# StartToImpact: Smart Contract con Solidity Advanced
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Hardhat](https://img.shields.io/badge/Hardhat-2.22.11-blue)
@@ -47,7 +47,7 @@ npm install
 npx hardhat compile
 ```
 
-1. Crea le variabili ambiente nel tuo sistema o crea un file nel root del progetto chiamandolo ".env" e aggiungi le seguenti variabili:
+5. Crea le variabili ambiente nel tuo sistema o crea un file nel root del progetto chiamandolo ".env" e aggiungi le seguenti variabili:
 
 ```
 INFURA_KEY=key_progetto_infura
