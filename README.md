@@ -41,17 +41,17 @@ cd DAO
 npm install
 ```
 
-4. Compila i contratti tramite hardhat:
-
-```
-npx hardhat compile
-```
-
-5. Crea le variabili ambiente nel tuo sistema o crea un file nel root del progetto chiamandolo ".env" e aggiungi le seguenti variabili:
+4. Crea le variabili ambiente nel tuo sistema o crea un file nel root del progetto chiamandolo ".env" e aggiungi le seguenti variabili:
 
 ```
 INFURA_KEY=key_progetto_infura
 PRIVATE_KEY=chiave_privata_wallet
+```
+
+5. Compila i contratti tramite hardhat:
+
+```
+npx hardhat compile
 ```
 
 ### Test
